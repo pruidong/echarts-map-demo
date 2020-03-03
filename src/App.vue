@@ -3,13 +3,15 @@
 * @Author:         TSY
 * @CreateDate:     2018/9/5 9:04
 * @email:          t@tsy6.com
+
+2020-03-02 增加下载全部文件时,下载一级地图数据.
 */
 <template>
     <div class="body">
         <div class="map">
             <map-range :download-tips="downloadTips" @change="search" @click="downloadJson"></map-range>
         </div>
-        <div class="echarts"> 
+        <div class="echarts">
             <div id="map"></div>
         </div>
         <div class="tips" v-show="isShowTips">正在下载，请耐心等待。。。(可打开控制台查看进度详情)</div>
@@ -32,7 +34,8 @@
         components: {
             Github,
             MoneyDialog,
-            MapRange},
+            MapRange
+        },
         data() {
             return {
                 cityName: '中国',
@@ -90,15 +93,16 @@
         },
         methods: {
             downloadMapCode() {// 下载mapCode数据
-                let mapCode = [],cityMapCode = [],provinceMapCode = [],provinceList = [],cityList = [],districtList=[];
+                let mapCode = [], cityMapCode = [], provinceMapCode = [], provinceList = [], cityList = [],
+                    districtList = [];
 
-                provinceList = this.codeList.filter(item=>{
+                provinceList = this.codeList.filter(item => {
                     return item.level === 'province'
                 })
-                cityList = this.codeList.filter(item=>{
+                cityList = this.codeList.filter(item => {
                     return item.level === 'city'
                 })
-                districtList = this.codeList.filter(item=>{
+                districtList = this.codeList.filter(item => {
                     return item.level === 'district'
                 })
 
@@ -114,7 +118,7 @@
                 for (let i in cityList) {
                     let children = []
                     for (let j in mapCode) {
-                        if(mapCode[j].fatherCode == cityList[i].code) {
+                        if (mapCode[j].fatherCode == cityList[i].code) {
                             children.push(mapCode[j])
                         }
                     }
@@ -129,7 +133,7 @@
                 for (let i in provinceList) {
                     let children = []
                     for (let j in cityMapCode) {
-                        if(cityMapCode[j].fatherCode == provinceList[i].code) {
+                        if (cityMapCode[j].fatherCode == provinceList[i].code) {
                             children.push(cityMapCode[j])
                         }
                     }
@@ -230,6 +234,13 @@
                     this.district.search(code, (status, result) => {
                         if (status == 'complete') {
                             console.log(`${code}--获取成功`)
+                            /// debugger
+                            /// 将第0个也打包进去.
+                            this.codeList.push({
+                                name: result.districtList[0].name,
+                                code: result.districtList[0].adcode,
+                                level: result.districtList[0].level
+                            });
                             for (let i in result.districtList[0].districtList) {
                                 this.codeList.push({
                                     name: result.districtList[0].districtList[i].name,
@@ -239,19 +250,26 @@
                                 //这边没想出来怎么判断数据是否全部加载完毕了，只能采用这种死办法
                                 //有更好解决方案的大佬，麻烦告诉我一下，邮箱t@tsy6.com
                                 //或者直接Github提交PR，在此不胜感激
-                                if (this.codeList.length >= 428) {
+                                if (this.codeList.length >= 428) { // 428
                                     console.log('code获取完成');
                                     this.isCodeListLoadComplete = true;
                                 }
-                                if (result.districtList[0].districtList[i].adcode && result.districtList[0].districtList[i].level != 'city' && result.districtList[0].districtList[i].level != 'district' && result.districtList[0].districtList[i].level != 'street') {
+                                if (result.districtList[0].districtList[i].adcode && result.districtList[0].districtList[i].level != 'city' && result.districtList[0].districtList[i].level != 'district' && result.districtList[0].districtList[i].level != 'street') { //
                                     this.loopSearch(result.districtList[0].districtList[i].adcode)
                                 }
                             }
                         } else {//第一遍查询出错，再次执行查询
                             console.log(`${code}--第一次获取失败，正在尝试进行第二次获取`)
+                            /// debugger
+                            /// 将第0个也打包进去.
                             this.district.search(code, (status, result) => {
                                 if (status == 'complete') {
                                     console.log(`${code}--第二次获取成功`)
+                                    this.codeList.push({
+                                        name: result.districtList[0].name,
+                                        code: result.districtList[0].adcode,
+                                        level: result.districtList[0].level
+                                    });
                                     for (let i in result.districtList[0].districtList) {
                                         this.codeList.push({
                                             name: result.districtList[0].districtList[i].name,
@@ -296,7 +314,7 @@
                                     console.log(`${this.codeList[i].level}--${this.codeList[i].name}--${this.codeList[i].code}，geo 数据获取成功，马上为你打包`)
                                 }
 
-                                if (this.codeList[i].level === 'province') {
+                                if (this.codeList[i].level === 'province' || this.codeList[i].level == 'country') {
                                     this.zip.file(`100000/${this.codeList[i].code}.geoJson`, JSON.stringify(mapJson));
                                 } else {
                                     this.zip.file(`100000/${this.codeList[i].code.substring(0, 2)}0000/${this.codeList[i].code}.geoJson`, JSON.stringify(mapJson));

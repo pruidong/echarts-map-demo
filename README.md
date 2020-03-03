@@ -15,3 +15,8 @@
 ### 赞助
 
 ![pay.jpg](https://raw.githubusercontent.com/TangSY/echarts-map-demo/master/src/images/pay.jpg)
+
+### 增加内容
+
+1. 在下载全部数据的时候将中国地图加入到下载文件中;
+2. 增加git过滤文件.
